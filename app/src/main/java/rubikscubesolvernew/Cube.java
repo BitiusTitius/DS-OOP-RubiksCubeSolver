@@ -118,20 +118,16 @@ public class Cube extends StackPane {
     }
 
     private Image createFaceletTexture(Color faceColor, String text) {
-        // Create a 128x128 2D layout canvas
         Canvas canvas = new Canvas(128, 128);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         
-        // 1. Fill base sticker color
         gc.setFill(faceColor);
         gc.fillRect(0, 0, 128, 128);
         
-        // 2. Optional: Draw a nice clean black border frame
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(6);
         gc.strokeRect(3, 3, 122, 122);
         
-        // 3. Draw high-contrast centered text
         Color textColor = (faceColor == Color.WHITE || faceColor == Color.YELLOW) ? Color.BLACK : Color.WHITE;
         gc.setFill(textColor);
         gc.setFont(Font.font("Arial", 36));
@@ -139,7 +135,6 @@ public class Cube extends StackPane {
         gc.setTextBaseline(VPos.CENTER);
         gc.fillText(text, 64, 64);
         
-        // Take a snapshot to convert it into a 3D-friendly texture image
         SnapshotParameters params = new SnapshotParameters();
         params.setFill(Color.TRANSPARENT);
         return canvas.snapshot(params, null);

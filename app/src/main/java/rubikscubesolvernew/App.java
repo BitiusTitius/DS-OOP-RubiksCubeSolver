@@ -20,8 +20,9 @@ public class App extends Application {
         BorderPane root = new BorderPane();
         root.setCenter(cube.getCube3D());
 
-        // Status label shown below the buttons
-        Label statusLabel = new Label("Left-click = clockwise  |  Right-click = counter-clockwise");
+        String defaultLabel = "Left click for clockwise, right click for counterclockwise";
+
+        Label statusLabel = new Label(defaultLabel);
         statusLabel.setStyle("-fx-text-fill: #cccccc; -fx-font-size: 12px;");
 
         FlowPane buttonPanel = new FlowPane();
@@ -32,15 +33,39 @@ public class App extends Application {
 
         Button addCube = new Button("Add cube");
         addCube.setStyle("-fx-font-size: 14px; -fx-min-width: 50px;");
-        addCube.setOnAction(e -> {
-
-        });
 
         Button undoBtn = new Button("⮌");
         undoBtn.setStyle("-fx-font-size: 14px; -fx-min-width: 50px;");
-        undoBtn.setOnAction(e -> {
+        undoBtn.setDisable(true);
 
+        Button redoBtn = new Button("⮎");
+        redoBtn.setStyle("-fx-font-size: 14px; -fx-min-width: 50px;");
+        redoBtn.setDisable(true);
+
+        Runnable updateUndoRedoButtons = () -> {
+            undoBtn.setDisable(!cube.canUndo());
+            redoBtn.setDisable(!cube.canRedo());
+        };
+
+        addCube.setOnAction(e -> {
+            new CubeStateEditorDialog(primaryStage, cube).show();
+            updateUndoRedoButtons.run();
+            statusLabel.setText("Cube state updated");
         });
+
+        undoBtn.setOnAction(e -> {
+            cube.undo();
+            updateUndoRedoButtons.run();
+            statusLabel.setText(cube.canUndo() ? "Undone" : "Nothing to undo");
+        });
+
+        redoBtn.setOnAction(e -> {
+            cube.redo();
+            updateUndoRedoButtons.run();
+            statusLabel.setText(cube.canRedo() ? "Redone" : "Nothing to redo");
+        });
+
+        buttonPanel.getChildren().addAll(addCube, undoBtn);
 
         String[] notations = { "U", "R", "F", "D", "L", "B" };
 
@@ -53,15 +78,12 @@ public class App extends Application {
                 } else if (e.getButton() == MouseButton.SECONDARY) {
                     cube.rotate(n + "'");
                 }
+                updateUndoRedoButtons.run();
             });
             buttonPanel.getChildren().add(button);
         }
 
-        Button redoBtn = new Button("⮎");
-        redoBtn.setStyle("-fx-font-size: 14px; -fx-min-width: 50px;");
-        redoBtn.setOnAction(e -> {
-            
-        });
+        buttonPanel.getChildren().add(redoBtn);
 
         Button solveButton = new Button("Solve");
         solveButton.setStyle("-fx-font-size: 14px; -fx-min-width: 80px; -fx-background-color: #4CAF50; -fx-text-fill: white;");
@@ -81,6 +103,7 @@ public class App extends Application {
                             int moveCount = solution.trim().split("\\s+").length;
                             statusLabel.setText("Solved in " + moveCount + " moves");
                         }
+                        updateUndoRedoButtons.run();
                         solveButton.setDisable(false);
                     });
                 } catch (Exception ex) {
@@ -93,6 +116,7 @@ public class App extends Application {
             solverThread.setDaemon(true);
             solverThread.start();
         });
+
         buttonPanel.getChildren().add(solveButton);
 
         FlowPane bottomPanel = new FlowPane();

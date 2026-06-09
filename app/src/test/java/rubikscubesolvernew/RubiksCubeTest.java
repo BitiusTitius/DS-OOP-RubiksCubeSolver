@@ -1,9 +1,6 @@
 package rubikscubesolvernew;
 
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 class RubiksCubeTest {
@@ -81,5 +78,59 @@ class RubiksCubeTest {
         int[] state = RubiksCube.solvedState();
         state[0] = 9;
         assertThrows(IllegalArgumentException.class, () -> RubiksCube.toFaceletString(state));
+    }
+
+    @Test
+    void undoRestoresPreviousState() {
+        RubiksCube cube = new RubiksCube(false);
+        int[] solved = cube.getState();
+        cube.rotate("R");
+        assertFalse(cube.isSolved());
+        assertTrue(cube.canUndo());
+        cube.undo();
+        assertArrayEquals(solved, cube.getState());
+        assertFalse(cube.canUndo());
+        assertTrue(cube.canRedo());
+    }
+
+    @Test
+    void redoReappliesUndoneState() {
+        RubiksCube cube = new RubiksCube(false);
+        cube.rotate("F");
+        int[] afterMove = cube.getState();
+        cube.undo();
+        cube.redo();
+        assertArrayEquals(afterMove, cube.getState());
+    }
+
+    @Test
+    void setStateCanBeUndone() {
+        RubiksCube cube = new RubiksCube(false);
+        int[] solved = cube.getState();
+        int[] scrambled = RubiksCube.applyMove(solved, "U");
+        cube.setState(scrambled);
+        assertArrayEquals(scrambled, cube.getState());
+        cube.undo();
+        assertArrayEquals(solved, cube.getState());
+    }
+
+    @Test
+    void applyMovesRecordsSingleUndoStep() {
+        RubiksCube cube = new RubiksCube(false);
+        int[] solved = cube.getState();
+        cube.applyMoves("R U R' U'");
+        assertFalse(cube.isSolved());
+        cube.undo();
+        assertArrayEquals(solved, cube.getState());
+    }
+
+    @Test
+    void newActionClearsRedoStack() {
+        RubiksCube cube = new RubiksCube(false);
+        cube.rotate("R");
+        cube.undo();
+        assertTrue(cube.canRedo());
+        cube.rotate("U");
+        assertFalse(cube.canRedo());
     }
 }

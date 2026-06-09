@@ -28,4 +28,15 @@ public final class TwoPhaseSolver {
         }
         return Arrays.asList(solution.split("\\s+"));
     }
+
+    public static boolean isReachable(int[] state) {
+        try {
+            String facelets = RubiksCube.toFaceletString(state);
+            Search search = new Search();
+            String solution = search.solution(facelets, MAX_LENGTH, PROBE_MAX, 0, 0);
+            return !solution.startsWith("Error");
+        } catch (IllegalArgumentException ex) {
+            return false;
+        }
+    }
 }

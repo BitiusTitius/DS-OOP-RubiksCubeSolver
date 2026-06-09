@@ -1,7 +1,9 @@
 package rubikscubesolvernew;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 
 public class RubiksCube {
@@ -30,6 +32,8 @@ public class RubiksCube {
     };
     private Cube cube3D;
     private ArrayList<String> moveHistory = new ArrayList<>();
+    private final Deque<int[]> undoStack = new ArrayDeque<>();
+    private final Deque<int[]> redoStack = new ArrayDeque<>();
 
     public RubiksCube() { // Create an unscrambled Rubiks cube
         this(SOLVED_STATE.clone(), true);
@@ -114,8 +118,82 @@ public class RubiksCube {
         if (moves == null || moves.isBlank()) {
             return;
         }
+        recordSnapshot();
         for (String move : moves.trim().split("\\s+")) {
-            rotate(move);
+            applyMoveInPlace(state, move);
+            appendToMoveHistory(move);
+        }
+        rebuild3D();
+        checkSolvedMessage();
+    }
+
+    public void setState(int[] newState) {
+        if (newState.length != 54) {
+            throw new IllegalArgumentException("State must have 54 elements.");
+        }
+        recordSnapshot();
+        this.state = newState.clone();
+        moveHistory.clear();
+        rebuild3D();
+    }
+
+    public boolean canUndo() {
+        return !undoStack.isEmpty();
+    }
+
+    public boolean canRedo() {
+        return !redoStack.isEmpty();
+    }
+
+    public void undo() {
+        if (undoStack.isEmpty()) {
+            return;
+        }
+        redoStack.push(state.clone());
+        state = undoStack.pop();
+        moveHistory.clear();
+        rebuild3D();
+    }
+
+    public void redo() {
+        if (redoStack.isEmpty()) {
+            return;
+        }
+        undoStack.push(state.clone());
+        state = redoStack.pop();
+        moveHistory.clear();
+        rebuild3D();
+    }
+
+    private void recordSnapshot() {
+        undoStack.push(state.clone());
+        redoStack.clear();
+    }
+
+    private void rebuild3D() {
+        if (cube3D != null) {
+            cube3D.buildCube(state);
+        }
+    }
+
+    private void appendToMoveHistory(String notation) {
+        int moveIndex = Arrays.asList(NOTATIONS).indexOf(notation);
+        if (moveIndex >= 12) {
+            moveHistory.add(notation);
+        } else {
+            int face = moveIndex % 6;
+            int direction = (moveIndex < 6) ? 1 : -1;
+            int historyIndex = face + (direction == 1 ? 0 : 6);
+            moveHistory.add(NOTATIONS[historyIndex]);
+        }
+    }
+
+    private void checkSolvedMessage() {
+        if (isSolved()) {
+            System.out.println("=== CUBE SOLVED! ===");
+            System.out.println("Move history: " + getMoveHistory());
+            System.out.println("Total moves: " + moveHistory.size());
+            printCube();
         }
     }
 
@@ -138,28 +216,11 @@ public class RubiksCube {
     }
 
     public void rotate(String notation) {
+        recordSnapshot();
         applyMoveInPlace(state, notation);
-
-        int moveIndex = Arrays.asList(NOTATIONS).indexOf(notation);
-        if (moveIndex >= 12) {
-            moveHistory.add(notation);
-        } else {
-            int face = moveIndex % 6;
-            int direction = (moveIndex < 6) ? 1 : -1;
-            int historyIndex = face + (direction == 1 ? 0 : 6);
-            moveHistory.add(NOTATIONS[historyIndex]);
-        }
-
-        if (this.cube3D != null) {
-            this.cube3D.buildCube(state);
-        }
-
-        if (isSolved()) {
-            System.out.println("=== CUBE SOLVED! ===");
-            System.out.println("Move history: " + getMoveHistory());
-            System.out.println("Total moves: " + moveHistory.size());
-            printCube();
-        }
+        appendToMoveHistory(notation);
+        rebuild3D();
+        checkSolvedMessage();
     }
 
     private static void applyMoveInPlace(int[] state, String notation) {
@@ -182,22 +243,15 @@ public class RubiksCube {
     }
 
     public void rotate(int face, int direction) { // face: 0=U,1=R,2=F,3=D,4=L,5=B; direction: 1=clockwise, -1=counter-clockwise
+        recordSnapshot();
         rotateFace(state, face, direction);
         rotateSides(state, face, direction);
 
         int moveIndex = face + (direction == 1 ? 0 : 6);
         moveHistory.add(NOTATIONS[moveIndex]);
 
-        if (this.cube3D != null) {
-            this.cube3D.buildCube(state);
-        }
-
-        if (isSolved()) {
-            System.out.println("=== CUBE SOLVED! ===");
-            System.out.println("Move history: " + getMoveHistory());
-            System.out.println("Total moves: " + moveHistory.size());
-            printCube();
-        }
+        rebuild3D();
+        checkSolvedMessage();
     }
 
     public void rotateFace(int face, int direction) {
