@@ -8,13 +8,29 @@ public final class CubeStateValidator {
     private static final int[] OPPOSITE = {0, 4, 5, 6, 1, 2, 3, 0, 0, 0, 0};
     private static final int[][] CENTER_PAIRS = {{4, 31}, {13, 40}, {22, 49}};
     private static final int[][] EDGE_PAIRS = {
-        {0, 45}, {2, 9}, {6, 18}, {8, 36},
-        {27, 44}, {29, 15}, {33, 24}, {35, 53},
-        {23, 12}, {21, 41}, {48, 14}, {50, 39}
+        {1, 46},
+        {5, 10},
+        {7, 19},
+        {3, 37},
+        {28, 25},
+        {32, 16},
+        {34, 52},
+        {30, 43},
+        {23, 12},
+        {21, 41},
+        {48, 14},
+        {50, 39}
     };
+
     private static final int[][] CORNER_TRIPLES = {
-        {8, 11, 20}, {6, 18, 36}, {0, 36, 47}, {2, 9, 45},
-        {35, 15, 26}, {33, 44, 24}, {27, 42, 53}, {29, 17, 51}
+        {6, 18, 38},
+        {8, 20, 9},
+        {2, 45, 11},
+        {0, 47, 36},
+        {27, 24, 44},
+        {29, 26, 15},
+        {35, 51, 17},
+        {33, 53, 42}
     };
     private static final Set<Set<Integer>> VALID_EDGES = Set.of(
         Set.of(1, 2), Set.of(1, 3), Set.of(1, 5), Set.of(1, 6),

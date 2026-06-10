@@ -16,7 +16,6 @@ public class RubiksCube {
         5, 5, 5, 5, 5, 5, 5, 5, 5, // Left face (Orange)
         6, 6, 6, 6, 6, 6, 6, 6, 6   // Back face (Blue)
     };
-    private static final char[] COLOR_TO_FACELET = {'U', 'R', 'F', 'D', 'L', 'B'};
     public static final int[][] CYCLES = {
         {  9, 10, 11,  18, 19, 20,  36, 37, 38,  45, 46, 47 },
         {  45, 48, 51,  35, 32, 29,  26, 23, 20,  8, 5, 2 },
@@ -30,6 +29,7 @@ public class RubiksCube {
         "U'", "R'", "F'", "D'", "L'", "B'",
         "U2", "R2", "F2", "D2", "L2", "B2"
     };
+    private static final char[] COLOR_TO_FACELET = {'U', 'R', 'F', 'D', 'L', 'B'};
     private Cube cube3D;
     private ArrayList<String> moveHistory = new ArrayList<>();
     private final Deque<int[]> undoStack = new ArrayDeque<>();
@@ -190,7 +190,7 @@ public class RubiksCube {
 
     private void checkSolvedMessage() {
         if (isSolved()) {
-            System.out.println("=== CUBE SOLVED! ===");
+            System.out.println("Cube solved:");
             System.out.println("Move history: " + getMoveHistory());
             System.out.println("Total moves: " + moveHistory.size());
             printCube();
@@ -215,21 +215,15 @@ public class RubiksCube {
         System.out.println(moveHistory);
     }
 
-    public void rotate(String notation) {
-        recordSnapshot();
-        applyMoveInPlace(state, notation);
-        appendToMoveHistory(notation);
-        rebuild3D();
-        checkSolvedMessage();
-    }
-
     private static void applyMoveInPlace(int[] state, String notation) {
         int moveIndex = Arrays.asList(NOTATIONS).indexOf(notation);
+
         if (moveIndex == -1) {
             throw new IllegalArgumentException("Invalid notation: " + notation);
         }
 
         int face = moveIndex % 6;
+        
         if (moveIndex >= 12) {
             rotateFace(state, face, 1);
             rotateSides(state, face, 1);
@@ -240,6 +234,16 @@ public class RubiksCube {
             rotateFace(state, face, direction);
             rotateSides(state, face, direction);
         }
+    }
+
+    // rotation logic
+
+    public void rotate(String notation) {
+        recordSnapshot();
+        applyMoveInPlace(state, notation);
+        appendToMoveHistory(notation);
+        rebuild3D();
+        checkSolvedMessage();
     }
 
     public void rotate(int face, int direction) { // face: 0=U,1=R,2=F,3=D,4=L,5=B; direction: 1=clockwise, -1=counter-clockwise
@@ -253,6 +257,8 @@ public class RubiksCube {
         rebuild3D();
         checkSolvedMessage();
     }
+
+    // rotate face only
 
     public void rotateFace(int face, int direction) {
         rotateFace(state, face, direction);
@@ -285,6 +291,8 @@ public class RubiksCube {
         }
     }
 
+    // rotate tiles adjacent to rotation
+
     public void rotateSides(int face, int direction) {
         rotateSides(state, face, direction);
     }
@@ -303,6 +311,8 @@ public class RubiksCube {
             }
         }
     }
+
+    // does exactly what it says lmaoo
 
     public void printCube() {
         System.out.println("Current Cube State:");

@@ -101,7 +101,7 @@ public class App extends Application {
                         } else {
                             cube.applyMoves(solution);
                             int moveCount = solution.trim().split("\\s+").length;
-                            statusLabel.setText("Solved in " + moveCount + " moves");
+                            statusLabel.setText("Solved in " + moveCount + " moves: " + solution);
                         }
                         updateUndoRedoButtons.run();
                         solveButton.setDisable(false);

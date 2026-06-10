@@ -14,9 +14,6 @@ import javafx.scene.shape.Box;
 import javafx.scene.transform.Rotate;
 import javafx.scene.transform.Translate;
 import javafx.scene.PerspectiveCamera;
-import javafx.scene.text.Font;
-import javafx.geometry.VPos;
-import javafx.scene.text.TextAlignment;
 
 public class Cube extends StackPane {
     private static final Color[] FACE_COLORS = {
@@ -59,7 +56,7 @@ public class Cube extends StackPane {
             PhongMaterial material = new PhongMaterial();
             
             // Bake the index ID string straight into the material texture map!
-            material.setDiffuseMap(createFaceletTexture(FACE_COLORS[colorVal], String.valueOf(i)));
+            material.setDiffuseMap(createFaceletTexture(FACE_COLORS[colorVal]));
             tile.setMaterial(material);
 
             Translate translate = new Translate();
@@ -117,7 +114,7 @@ public class Cube extends StackPane {
         }
     }
 
-    private Image createFaceletTexture(Color faceColor, String text) {
+    private Image createFaceletTexture(Color faceColor) {
         Canvas canvas = new Canvas(128, 128);
         GraphicsContext gc = canvas.getGraphicsContext2D();
         
@@ -127,13 +124,6 @@ public class Cube extends StackPane {
         gc.setStroke(Color.BLACK);
         gc.setLineWidth(6);
         gc.strokeRect(3, 3, 122, 122);
-        
-        Color textColor = (faceColor == Color.WHITE || faceColor == Color.YELLOW) ? Color.BLACK : Color.WHITE;
-        gc.setFill(textColor);
-        gc.setFont(Font.font("Arial", 36));
-        gc.setTextAlign(TextAlignment.CENTER);
-        gc.setTextBaseline(VPos.CENTER);
-        gc.fillText(text, 64, 64);
         
         SnapshotParameters params = new SnapshotParameters();
         params.setFill(Color.TRANSPARENT);

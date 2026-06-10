@@ -1,11 +1,11 @@
 package rubikscubesolvernew;
 
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -27,6 +27,9 @@ public class CubeStateEditorDialog {
     private final int[] editorState;
     private final Button[][] stickerButtons = new Button[GRID_ROWS][GRID_COLS];
     private final Label errorLabel = new Label();
+    
+    private int selectedColor = 1;
+    private final Button[] colorSwatches = new Button[7];
 
     public CubeStateEditorDialog(Window owner, RubiksCube cube) {
         this.cube = cube;
@@ -35,14 +38,14 @@ public class CubeStateEditorDialog {
         stage.initOwner(owner);
         stage.initModality(Modality.WINDOW_MODAL);
         stage.setTitle("Enter Cube State");
-        stage.setScene(new Scene(buildContent(), 560, 520));
+        stage.setScene(new Scene(buildContent(), 560, 600));
     }
 
     public void show() {
         stage.showAndWait();
     }
 
-    private VBox buildContent() {
+    private BorderPane buildContent() {
         GridPane net = buildNetGrid();
         VBox legend = buildLegend();
         errorLabel.setStyle("-fx-text-fill: #ff6b6b;");
@@ -57,15 +60,22 @@ public class CubeStateEditorDialog {
         cancelButton.setOnAction(e -> stage.close());
 
         HBox actions = new HBox(10, okButton, cancelButton);
-        actions.setAlignment(Pos.CENTER_RIGHT);
+        actions.setAlignment(Pos.CENTER);
+        BorderPane.setMargin(actions, new Insets(12, 0, 0, 0));
 
-        Label hint = new Label("Click a sticker to cycle its color.");
+        Label hint = new Label("Select a color from the palette below, then click a tile to paint it.");
         hint.setStyle("-fx-text-fill: #cccccc;");
 
-        VBox root = new VBox(12, hint, net, legend, errorLabel, actions);
-        root.setAlignment(Pos.TOP_CENTER);
+        VBox upperContent = new VBox(12, hint, net, legend, errorLabel);
+        upperContent.setAlignment(Pos.TOP_CENTER);
+
+        BorderPane root = new BorderPane();
         root.setPadding(new Insets(16));
         root.setStyle("-fx-background-color: #2b2b2b;");
+        
+        root.setCenter(upperContent);
+        root.setBottom(actions);
+        
         return root;
     }
 
@@ -86,12 +96,12 @@ public class CubeStateEditorDialog {
             grid.getRowConstraints().add(rowConstraints);
         }
 
-        placeFace(grid, 1, 3, 0, "Up");
-        placeFace(grid, 4, 0, 4, "Left");
-        placeFace(grid, 4, 3, 2, "Front");
-        placeFace(grid, 4, 6, 1, "Right");
-        placeFace(grid, 4, 9, 5, "Back");
-        placeFace(grid, 7, 3, 3, "Down");
+        placeFace(grid, 1, 3, 0, "U");
+        placeFace(grid, 4, 0, 4, "L");
+        placeFace(grid, 4, 3, 2, "F");
+        placeFace(grid, 4, 6, 1, "R");
+        placeFace(grid, 4, 9, 5, "B");
+        placeFace(grid, 7, 3, 3, "D");
 
         for (int row = 0; row < GRID_ROWS; row++) {
             for (int col = 0; col < GRID_COLS; col++) {
@@ -105,15 +115,15 @@ public class CubeStateEditorDialog {
     }
 
     private void placeFace(GridPane grid, int gridRow, int gridCol, int face, String label) {
-        Label faceLabel = new Label(label);
-        faceLabel.setStyle("-fx-text-fill: #aaaaaa; -fx-font-size: 10px;");
-        GridPane.setHalignment(faceLabel, HPos.CENTER);
-        grid.add(faceLabel, gridCol, gridRow - 1, 3, 1);
-
         for (int row = 0; row < 3; row++) {
             for (int col = 0; col < 3; col++) {
                 int stickerIndex = face * 9 + row * 3 + col;
                 Button sticker = createStickerButton(stickerIndex);
+                
+                if (row == 1 && col == 1) {
+                    sticker.setText(label);
+                }
+                
                 stickerButtons[gridRow + row][gridCol + col] = sticker;
                 grid.add(sticker, gridCol + col, gridRow + row);
             }
@@ -125,8 +135,9 @@ public class CubeStateEditorDialog {
         button.setMinSize(STICKER_SIZE, STICKER_SIZE);
         button.setMaxSize(STICKER_SIZE, STICKER_SIZE);
         updateStickerAppearance(button, editorState[stickerIndex]);
+        
         button.setOnAction(e -> {
-            editorState[stickerIndex] = CubeColors.nextColor(editorState[stickerIndex]);
+            editorState[stickerIndex] = selectedColor;
             updateStickerAppearance(button, editorState[stickerIndex]);
             errorLabel.setText("");
         });
@@ -135,10 +146,13 @@ public class CubeStateEditorDialog {
 
     private void updateStickerAppearance(Button button, int color) {
         String hex = CubeColors.fxColor(color).toString().replace("0x", "#");
+        String textColor = (color == 1 || color == 4) ? "black" : "white";
         button.setStyle(
             "-fx-background-color: " + hex + ";" +
             "-fx-border-color: #222222;" +
-            "-fx-border-width: 1px;"
+            "-fx-border-width: 1px;" +
+            "-fx-text-fill: " + textColor + ";" +
+            "-fx-font-weight: bold;"
         );
     }
 
@@ -147,20 +161,44 @@ public class CubeStateEditorDialog {
         swatches.setAlignment(Pos.CENTER);
         for (int color = 1; color <= 6; color++) {
             Button swatch = new Button(CubeColors.name(color));
-            swatch.setDisable(true);
-            String hex = CubeColors.fxColor(color).toString().replace("0x", "#");
-            swatch.setStyle(
-                "-fx-background-color: " + hex + ";" +
-                "-fx-text-fill: " + (color == 1 || color == 4 ? "black" : "white") + ";" +
-                "-fx-font-size: 11px;"
-            );
+            colorSwatches[color] = swatch;
+            
+            final int currentColor = color;
+            swatch.setOnAction(e -> {
+                selectedColor = currentColor;
+                updatePaletteHighlight();
+            });
+            
             swatches.getChildren().add(swatch);
         }
-        Label legendLabel = new Label("Colors");
+        
+        updatePaletteHighlight();
+
+        Label legendLabel = new Label("Color Palette");
         legendLabel.setStyle("-fx-text-fill: #cccccc;");
         VBox legend = new VBox(4, legendLabel, swatches);
         legend.setAlignment(Pos.CENTER);
         return legend;
+    }
+
+    private void updatePaletteHighlight() {
+        for (int color = 1; color <= 6; color++) {
+            Button swatch = colorSwatches[color];
+            if (swatch != null) {
+                String hex = CubeColors.fxColor(color).toString().replace("0x", "#");
+                String textColor = (color == 1 || color == 4) ? "black" : "white";
+                String border = (color == selectedColor) 
+                    ? "-fx-border-color: #ffffff; -fx-border-width: 2px;" 
+                    : "-fx-border-color: #222222; -fx-border-width: 1px;";
+                swatch.setStyle(
+                    "-fx-background-color: " + hex + ";" +
+                    "-fx-text-fill: " + textColor + ";" +
+                    "-fx-font-size: 11px;" +
+                    "-fx-font-weight: bold;" +
+                    border
+                );
+            }
+        }
     }
 
     private void confirm() {
