@@ -99,7 +99,7 @@ public class RubiksCube {
 
     public static int[] applyMove(int[] state, String notation) {
         int[] result = state.clone();
-        applyMoveInPlace(result, notation);
+        rotate(result, notation);
         return result;
     }
 
@@ -109,7 +109,7 @@ public class RubiksCube {
             return result;
         }
         for (String move : moves.trim().split("\\s+")) {
-            applyMoveInPlace(result, move);
+            rotate(result, move);
         }
         return result;
     }
@@ -120,7 +120,7 @@ public class RubiksCube {
         }
         recordSnapshot();
         for (String move : moves.trim().split("\\s+")) {
-            applyMoveInPlace(state, move);
+            rotate(state, move);
             appendToMoveHistory(move);
         }
         rebuild3D();
@@ -215,7 +215,28 @@ public class RubiksCube {
         System.out.println(moveHistory);
     }
 
-    private static void applyMoveInPlace(int[] state, String notation) {
+    // rotation logic
+
+    public void rotate(String notation) {
+        recordSnapshot();
+        rotate(this.state, notation);
+        appendToMoveHistory(notation);
+        rebuild3D();
+        checkSolvedMessage();
+    }
+
+    public void rotate(int face, int direction) {
+        recordSnapshot();
+        rotate(this.state, face, direction);
+
+        int moveIndex = face + (direction == 1 ? 0 : 6);
+        moveHistory.add(NOTATIONS[moveIndex]);
+
+        rebuild3D();
+        checkSolvedMessage();
+    }
+
+    public static void rotate(int[] state, String notation) {
         int moveIndex = Arrays.asList(NOTATIONS).indexOf(notation);
 
         if (moveIndex == -1) {
@@ -225,44 +246,20 @@ public class RubiksCube {
         int face = moveIndex % 6;
         
         if (moveIndex >= 12) {
-            rotateFace(state, face, 1);
-            rotateSides(state, face, 1);
-            rotateFace(state, face, 1);
-            rotateSides(state, face, 1);
+            rotate(state, face, 1);
+            rotate(state, face, 1);
         } else {
             int direction = (moveIndex < 6) ? 1 : -1;
-            rotateFace(state, face, direction);
-            rotateSides(state, face, direction);
+            rotate(state, face, direction);
         }
     }
 
-    // rotation logic
-
-    public void rotate(String notation) {
-        recordSnapshot();
-        applyMoveInPlace(state, notation);
-        appendToMoveHistory(notation);
-        rebuild3D();
-        checkSolvedMessage();
-    }
-
-    public void rotate(int face, int direction) { // face: 0=U,1=R,2=F,3=D,4=L,5=B; direction: 1=clockwise, -1=counter-clockwise
-        recordSnapshot();
+    public static void rotate(int[] state, int face, int direction) {
         rotateFace(state, face, direction);
         rotateSides(state, face, direction);
-
-        int moveIndex = face + (direction == 1 ? 0 : 6);
-        moveHistory.add(NOTATIONS[moveIndex]);
-
-        rebuild3D();
-        checkSolvedMessage();
     }
 
     // rotate face only
-
-    public void rotateFace(int face, int direction) {
-        rotateFace(state, face, direction);
-    }
 
     private static void rotateFace(int[] state, int face, int direction) {
         int start = face * 9;
@@ -292,10 +289,6 @@ public class RubiksCube {
     }
 
     // rotate tiles adjacent to rotation
-
-    public void rotateSides(int face, int direction) {
-        rotateSides(state, face, direction);
-    }
 
     private static void rotateSides(int[] state, int face, int direction) {
         int[] tempState = state.clone();

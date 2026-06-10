@@ -51,11 +51,9 @@ public class Cube extends StackPane {
             int col = i % 9 % 3;
             int colorVal = state[i];
 
-            // Create the sticker Box
             Box tile = new Box(0.95, 0.95, 0.05);
             PhongMaterial material = new PhongMaterial();
             
-            // Bake the index ID string straight into the material texture map!
             material.setDiffuseMap(createFaceletTexture(FACE_COLORS[colorVal]));
             tile.setMaterial(material);
 
@@ -74,7 +72,7 @@ public class Cube extends StackPane {
                 case 1: // Right (Red)
                     translate.setX(1.5 * offset);
                     translate.setY((row - 1) * offset);
-                    translate.setZ((col - 1) * offset); // Inverted to match standard cube unwrapping
+                    translate.setZ((col - 1) * offset);
                     rotateY.setAngle(90);
                     break;
                     
@@ -87,7 +85,7 @@ public class Cube extends StackPane {
                 case 3: // Down (Yellow)
                     translate.setX((col - 1) * offset);
                     translate.setY(1.5 * offset);
-                    translate.setZ((row - 1) * offset); // Inverted to keep orientation consistent
+                    translate.setZ((row - 1) * offset);
                     rotateX.setAngle(90);
                     break;
                     
@@ -99,7 +97,7 @@ public class Cube extends StackPane {
                     break;
                     
                 case 5: // Back (Blue)
-                    translate.setX((1 - col) * offset); // Inverted so left-to-right matches up correctly
+                    translate.setX((1 - col) * offset);
                     translate.setY((row - 1) * offset);
                     translate.setZ(1.5 * offset);
                     rotateY.setAngle(180);
